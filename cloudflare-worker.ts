@@ -11,6 +11,10 @@ const app = new Hono<{ Bindings: Bindings }>()
 // Allow CORS so the frontend can interact with this API
 app.use('/*', cors())
 
+app.get('/', (c) => {
+  return c.text('CFLARE Proxy Backend API is running! \n\nThis worker only serves the backend API (/api/*). Please deploy the frontend separately to Cloudflare Pages.')
+})
+
 // --- User Management API ---
 
 // 1. Endpoint to get all saved users from KV
