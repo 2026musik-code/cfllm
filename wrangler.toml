@@ -1,0 +1,8 @@
+name = "cflare-proxy"
+compatibility_date = "2024-03-20"
+main = "cloudflare-worker.ts"
+
+# KV Namespace Binding
+[[kv_namespaces]]
+binding = "userkey"
+id = "324786888f8a40318c2489d755443036"
