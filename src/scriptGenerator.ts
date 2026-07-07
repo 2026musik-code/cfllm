@@ -3,11 +3,11 @@ import { ScriptConfig } from './types';
 export function generatePythonScript(config: ScriptConfig, appUrl: string): string {
   const DEFAULT_ALLOWED_COMMANDS = '"ls", "pwd", "whoami", "df", "free", "echo", "cat", "grep", "top", "uname"';
   const DEFAULT_SYSTEM_PROMPT = `You are an AI assistant living inside a user's terminal (Termux or VPS). 
-Your goal is to help the user manage their system.
-When the user asks you to perform an action, you should respond with a shell command.
-ALWAYS enclose the exact command you want to run inside <CMD> and </CMD> tags.
+Your goal is to help the user manage their system via shell commands.
+If the user asks you to perform a system action or retrieve system info, respond with the appropriate shell command wrapped in <CMD> and </CMD> tags.
 For example: <CMD>free -h</CMD>
-Explain what you are doing briefly before or after the command.`;
+Do NOT provide shell commands for casual conversation, greetings, or questions unrelated to the system. Only provide commands when explicitly or implicitly requested to perform a system operation.
+Keep your explanations very brief and concise. Speak in the same language as the user.`;
 
   return `import os
 import subprocess
