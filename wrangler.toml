@@ -1,4 +1,4 @@
-name = "cflare-proxy"
+name = "cfllm"
 compatibility_date = "2024-03-20"
 main = "cloudflare-worker.ts"
 
