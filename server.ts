@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -39,11 +40,20 @@ async function startServer() {
 
   // Simulate KV storage in memory for preview environment
   let usersStore: any[] = [];
+  const usersFile = path.join(process.cwd(), 'users.json');
+  if (fs.existsSync(usersFile)) {
+    try {
+      usersStore = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+    } catch (e) {
+      console.error('Failed to parse users.json', e);
+    }
+  }
 
   // API Route to save user
   app.post('/api/users', express.json(), (req, res) => {
     const user = req.body;
     usersStore = [user, ...usersStore];
+    fs.writeFileSync(usersFile, JSON.stringify(usersStore, null, 2));
     res.json({ success: true });
   });
 

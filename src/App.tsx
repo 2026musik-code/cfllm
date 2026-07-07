@@ -332,20 +332,13 @@ export default function App() {
               <div className="bg-zinc-900/40 border border-white/10 rounded-2xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/0 via-emerald-500/50 to-emerald-500/0"></div>
                 
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center mb-6">
                   <div className="flex items-center space-x-3">
                     <div className="bg-zinc-800/50 p-1.5 rounded-md">
                       <Cpu className="w-5 h-5 text-emerald-400" />
                     </div>
                     <h2 className="text-xl font-semibold text-zinc-50 tracking-tight">Configuration</h2>
                   </div>
-                  <button 
-                    onClick={handleSaveUser}
-                    className="flex items-center space-x-2 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/40 rounded-lg transition-all text-sm font-medium"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>Simpan</span>
-                  </button>
                 </div>
 
                 <div className="space-y-5">
@@ -415,6 +408,14 @@ export default function App() {
                       className="w-full bg-zinc-950/80 border border-white/10 rounded-lg px-4 py-2.5 text-zinc-200 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner"
                     />
                   </div>
+
+                  <button 
+                    onClick={handleSaveUser}
+                    className="w-full flex items-center justify-center space-x-2 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors font-medium text-sm shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] mt-4"
+                  >
+                    <Save className="w-5 h-5" />
+                    <span>Simpan Data Pengguna</span>
+                  </button>
                 </div>
               </div>
               
