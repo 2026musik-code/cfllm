@@ -99,10 +99,10 @@ app.post('/api/chat', async (c) => {
       return c.json({ error: 'Missing Cloudflare credentials' }, 400)
     }
 
-    const cleanAccountId = accountId.trim()
-    let cleanToken = token.trim()
+    const cleanAccountId = accountId.trim().replace(/^["']|["']$/g, '')
+    let cleanToken = token.trim().replace(/^["']|["']$/g, '')
     if (cleanToken.toLowerCase().startsWith('bearer ')) {
-      cleanToken = cleanToken.substring(7).trim()
+      cleanToken = cleanToken.substring(7).trim().replace(/^["']|["']$/g, '')
     }
 
     const model = modelId || '@cf/meta/llama-3-8b-instruct'

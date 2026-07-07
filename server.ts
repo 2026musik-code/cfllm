@@ -61,10 +61,10 @@ async function startServer() {
         return res.status(400).json({ error: 'Missing Cloudflare credentials (accountId and token)' });
       }
 
-      const cleanAccountId = accountId.trim();
-      let cleanToken = token.trim();
+      const cleanAccountId = accountId.trim().replace(/^["']|["']$/g, '');
+      let cleanToken = token.trim().replace(/^["']|["']$/g, '');
       if (cleanToken.toLowerCase().startsWith('bearer ')) {
-        cleanToken = cleanToken.substring(7).trim();
+        cleanToken = cleanToken.substring(7).trim().replace(/^["']|["']$/g, '');
       }
 
       const model = modelId || '@cf/meta/llama-3-8b-instruct'; // Use provided model or default
