@@ -25,7 +25,7 @@ export default function App() {
     accountId: '',
     apiToken: '',
     username: '',
-    modelId: '@cf/meta/llama-3-8b-instruct'
+    modelId: '@cf/meta/llama-3.1-8b-instruct'
   });
 
   const [linkCopied, setLinkCopied] = useState(false);

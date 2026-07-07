@@ -100,7 +100,10 @@ app.post('/api/chat', async (c) => {
     }
 
     const cleanAccountId = accountId.trim()
-    const cleanToken = token.trim()
+    let cleanToken = token.trim()
+    if (cleanToken.toLowerCase().startsWith('bearer ')) {
+      cleanToken = cleanToken.substring(7).trim()
+    }
 
     const model = modelId || '@cf/meta/llama-3-8b-instruct'
     const url = `https://api.cloudflare.com/client/v4/accounts/${cleanAccountId}/ai/run/${model}`

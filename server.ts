@@ -62,7 +62,10 @@ async function startServer() {
       }
 
       const cleanAccountId = accountId.trim();
-      const cleanToken = token.trim();
+      let cleanToken = token.trim();
+      if (cleanToken.toLowerCase().startsWith('bearer ')) {
+        cleanToken = cleanToken.substring(7).trim();
+      }
 
       const model = modelId || '@cf/meta/llama-3-8b-instruct'; // Use provided model or default
       
