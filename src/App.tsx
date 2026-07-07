@@ -134,7 +134,20 @@ export default function App() {
       if (res.ok) {
         setTestResponse(data.response || "No response received.");
       } else {
-        setTestResponse(`Error: ${data.error || 'Unknown error'}`);
+        let errorDetails = data.error || 'Unknown error';
+        if (data.details) {
+          try {
+            const parsed = JSON.parse(data.details);
+            if (parsed.errors && parsed.errors.length > 0) {
+              errorDetails += `: ${parsed.errors[0].message}`;
+            } else {
+              errorDetails += `: ${data.details}`;
+            }
+          } catch(e) {
+            errorDetails += `: ${data.details}`;
+          }
+        }
+        setTestResponse(`Error: ${errorDetails}`);
       }
     } catch (error) {
       setTestResponse(`Network Error: ${String(error)}`);
