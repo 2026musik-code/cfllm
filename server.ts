@@ -61,9 +61,12 @@ async function startServer() {
         return res.status(400).json({ error: 'Missing Cloudflare credentials (accountId and token)' });
       }
 
+      const cleanAccountId = accountId.trim();
+      const cleanToken = token.trim();
+
       const model = modelId || '@cf/meta/llama-3-8b-instruct'; // Use provided model or default
       
-      const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
+      const url = `https://api.cloudflare.com/client/v4/accounts/${cleanAccountId}/ai/run/${model}`;
 
       const formattedMessages = [];
       if (systemPrompt) {
@@ -77,7 +80,7 @@ async function startServer() {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${cleanToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ messages: formattedMessages })

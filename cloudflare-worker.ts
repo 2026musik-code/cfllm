@@ -99,8 +99,11 @@ app.post('/api/chat', async (c) => {
       return c.json({ error: 'Missing Cloudflare credentials' }, 400)
     }
 
+    const cleanAccountId = accountId.trim()
+    const cleanToken = token.trim()
+
     const model = modelId || '@cf/meta/llama-3-8b-instruct'
-    const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`
+    const url = `https://api.cloudflare.com/client/v4/accounts/${cleanAccountId}/ai/run/${model}`
 
     const formattedMessages = []
     if (systemPrompt) {
@@ -113,7 +116,7 @@ app.post('/api/chat', async (c) => {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${cleanToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
