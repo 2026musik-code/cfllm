@@ -4,16 +4,13 @@ import { cors } from 'hono/cors'
 // Define the Cloudflare environment bindings
 type Bindings = {
   userkey: KVNamespace // KV Namespace "userkey"
+  ASSETS: Fetcher // Binding khusus Cloudflare Pages untuk file statis
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
 
 // Allow CORS so the frontend can interact with this API
-app.use('/*', cors())
-
-app.get('/', (c) => {
-  return c.text('CFLARE Proxy Backend API is running! \n\nThis worker only serves the backend API (/api/*). Please deploy the frontend separately to Cloudflare Pages.')
-})
+app.use('/api/*', cors())
 
 // --- User Management API ---
 
@@ -138,8 +135,22 @@ app.post('/api/chat', async (c) => {
   }
 })
 
-// For Hono running on Cloudflare Pages, serving static assets is handled automatically by the Pages build.
-// If deployed as a standalone Worker, you would need to host the React dist/ folder somewhere.
-// Typically for a full-stack React app, you'd deploy this as Cloudflare Pages with Hono handling the /api routes.
+// --- Frontend SPA Fallback ---
+
+// Menangani request untuk file statis (HTML, CSS, JS React) di Cloudflare Pages
+app.get('*', async (c) => {
+  // Coba ambil file sesuai URL request dari Assets
+  let response = await c.env.ASSETS.fetch(c.req.raw)
+  
+  // Jika file tidak ditemukan (contoh: user mereload halaman /dashboard di React Router),
+  // Cloudflare akan mengembalikan 404. Maka kita redirect ke / (index.html) agar React merender UI nya.
+  if (response.status === 404) {
+    const url = new URL(c.req.url)
+    url.pathname = '/'
+    response = await c.env.ASSETS.fetch(new Request(url.toString(), c.req.raw))
+  }
+  
+  return response
+})
 
 export default app

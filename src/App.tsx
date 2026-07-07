@@ -13,7 +13,7 @@ const PROVIDERS = [
   { id: '@cf/tinyllama/tinyllama-1.1b-chat-v1.0', name: 'TinyLlama 1.1B Chat', provider: 'TinyLlama', color: 'from-yellow-500 to-orange-500', badge: 'Ultra Fast' },
 ];
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cfllm.vipcf.workers.dev'; // Ubah ke url worker jika deploy Frontend ke Cloudflare Pages
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''; // Gunakan path relatif agar request menuju ke host yang sama di Cloudflare Pages
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'docs' | 'users'>('dashboard');
