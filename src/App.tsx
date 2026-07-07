@@ -13,6 +13,8 @@ const PROVIDERS = [
   { id: '@cf/tinyllama/tinyllama-1.1b-chat-v1.0', name: 'TinyLlama 1.1B Chat', provider: 'TinyLlama', color: 'from-yellow-500 to-orange-500', badge: 'Ultra Fast' },
 ];
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''; // Ubah ke 'https://vipcf.workers.dev' saat deploy Frontend ke Cloudflare Pages
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'docs' | 'users'>('dashboard');
   const [isServerPopupOpen, setIsServerPopupOpen] = useState(false);
@@ -41,7 +43,7 @@ export default function App() {
 
   // Load history from API on mount
   useEffect(() => {
-    fetch('/api/users')
+    fetch(`${API_BASE_URL}/api/users`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -64,7 +66,7 @@ export default function App() {
     };
     
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch(`${API_BASE_URL}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser)
@@ -82,7 +84,7 @@ export default function App() {
   const handleGenerateLink = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch('/api/save-script', {
+      const res = await fetch(`${API_BASE_URL}/api/save-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ script: scriptCode }),
@@ -116,7 +118,7 @@ export default function App() {
     setTestResponse("Testing connection...");
     
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
