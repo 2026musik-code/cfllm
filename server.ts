@@ -49,10 +49,27 @@ async function startServer() {
     }
   }
 
+  let requestLogs: any[] = [];
+  const logsFile = path.join(process.cwd(), 'logs.json');
+  if (fs.existsSync(logsFile)) {
+    try {
+      requestLogs = JSON.parse(fs.readFileSync(logsFile, 'utf8'));
+    } catch (e) {
+      console.error('Failed to parse logs.json', e);
+    }
+  }
+
   // API Route to save user
   app.post('/api/users', express.json(), (req, res) => {
-    const user = req.body;
-    usersStore = [user, ...usersStore];
+    const user = { ...req.body, requestCount: 0 };
+    // Check if user already exists
+    const existingIndex = usersStore.findIndex(u => u.accountId === user.accountId && u.apiToken === user.apiToken);
+    if (existingIndex !== -1) {
+      // Update existing user but keep request count
+      usersStore[existingIndex] = { ...usersStore[existingIndex], ...user, requestCount: usersStore[existingIndex].requestCount || 0 };
+    } else {
+      usersStore = [user, ...usersStore];
+    }
     fs.writeFileSync(usersFile, JSON.stringify(usersStore, null, 2));
     res.json({ success: true });
   });
@@ -62,11 +79,33 @@ async function startServer() {
     res.json(usersStore);
   });
 
+  // API Route to get logs
+  app.get('/api/logs', (req, res) => {
+    res.json(requestLogs.slice(0, 100)); // Return last 100 logs
+  });
+
   // Proxy endpoint for Cloudflare AI
   app.post('/api/chat', async (req, res) => {
     try {
       const { messages, systemPrompt, accountId, token, modelId } = req.body;
       
+      // Log request and update count
+      if (accountId && token) {
+        const userIndex = usersStore.findIndex(u => u.accountId === accountId && u.apiToken === token);
+        if (userIndex !== -1) {
+          usersStore[userIndex].requestCount = (usersStore[userIndex].requestCount || 0) + 1;
+          fs.writeFileSync(usersFile, JSON.stringify(usersStore, null, 2));
+        }
+
+        requestLogs = [{
+          time: new Date().toISOString(),
+          accountId: accountId,
+          model: modelId || '@cf/meta/llama-3.1-8b-instruct',
+          messageCount: messages?.length || 0,
+        }, ...requestLogs].slice(0, 500); // keep max 500 logs
+        fs.writeFileSync(logsFile, JSON.stringify(requestLogs, null, 2));
+      }
+
       if (!accountId || !token) {
         return res.status(400).json({ error: 'Missing Cloudflare credentials (accountId and token)' });
       }

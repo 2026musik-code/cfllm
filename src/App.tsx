@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Copy, Terminal, Cpu, Link as LinkIcon, Send, Activity, Clock, User as UserIcon, BookOpen, Users, LayoutDashboard, Save, Server, Globe, Zap, Database, X, ChevronRight, CheckCircle2, Search } from 'lucide-react';
-import { ScriptConfig, SavedUser } from './types';
+import { ScriptConfig, SavedUser, RequestLog } from './types';
 import { generatePythonScript } from './scriptGenerator';
 
 const PROVIDERS = [
@@ -16,7 +16,7 @@ const PROVIDERS = [
 const API_BASE_URL = import.meta.env.VITE_API_URL || ''; // Gunakan path relatif agar request menuju ke host yang sama di Cloudflare Pages
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'docs' | 'users'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'docs' | 'users' | 'logs'>('dashboard');
   const [isServerPopupOpen, setIsServerPopupOpen] = useState(false);
   const [isProviderPopupOpen, setIsProviderPopupOpen] = useState(false);
   const [searchProvider, setSearchProvider] = useState('');
@@ -31,12 +31,12 @@ export default function App() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [scriptUrl, setScriptUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [testPrompt, setTestPrompt] = useState('');
   const [testResponse, setTestResponse] = useState('');
   const [isTesting, setIsTesting] = useState(false);
   
   const [savedUsers, setSavedUsers] = useState<SavedUser[]>([]);
+  const [requestLogs, setRequestLogs] = useState<RequestLog[]>([]);
 
   const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const scriptCode = generatePythonScript(config, appUrl);
@@ -51,6 +51,15 @@ export default function App() {
         }
       })
       .catch(e => console.error("Failed to fetch users", e));
+
+    fetch(`${API_BASE_URL}/api/logs`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setRequestLogs(data);
+        }
+      })
+      .catch(e => console.error("Failed to fetch logs", e));
   }, []);
 
   const handleSaveUser = async () => {
@@ -157,9 +166,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-300 font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-yellow-900/20 text-zinc-300 font-sans selection:bg-yellow-500/30">
       {/* Header */}
-      <header className="border-b border-white/5 bg-zinc-950/80 backdrop-blur-xl sticky top-0 z-20">
+      <header className="border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-[#f38020]/10 p-2 rounded-lg border border-[#f38020]/20 shadow-[0_0_15px_rgba(243,128,32,0.15)]">
@@ -531,8 +540,11 @@ export default function App() {
                   {savedUsers.map((user, index) => (
                     <div key={index} className="bg-zinc-950/60 border border-white/5 rounded-xl p-5 flex flex-col hover:border-white/10 transition-colors group relative">
                       <div className="flex items-center space-x-4 mb-4">
-                        <div className="bg-purple-500/10 p-3 rounded-full">
-                          <UserIcon className="w-6 h-6 text-purple-400" />
+                        <div className="bg-yellow-500/10 p-3 rounded-full relative">
+                          <UserIcon className="w-6 h-6 text-yellow-400" />
+                          <div className="absolute -top-2 -right-2 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center border-2 border-zinc-950">
+                            {user.requestCount || 0}
+                          </div>
                         </div>
                         <div>
                           <p className="text-zinc-100 font-semibold text-base">{user.username}</p>
@@ -574,6 +586,51 @@ export default function App() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+            <div className="bg-zinc-900/40 border border-white/10 rounded-2xl p-5 sm:p-7 shadow-xl backdrop-blur-sm flex flex-col relative overflow-hidden min-h-[500px]">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 blur-[50px] rounded-full pointer-events-none"></div>
+               
+               <h3 className="text-xl font-semibold text-zinc-50 mb-6 flex items-center">
+                <div className="bg-zinc-800/50 p-1.5 rounded-md mr-3">
+                  <Activity className="w-5 h-5 text-yellow-400" />
+                </div>
+                Log Request API
+              </h3>
+
+              {requestLogs.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-white/5 rounded-xl bg-zinc-950/30 border-dashed">
+                  <Activity className="w-12 h-12 text-zinc-700 mb-4" />
+                  <p className="text-zinc-400 text-base font-medium">Belum ada log request.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-white/5 bg-zinc-950/60">
+                  <table className="w-full text-left text-sm text-zinc-400">
+                    <thead className="text-xs text-zinc-500 uppercase bg-zinc-900/50">
+                      <tr>
+                        <th className="px-4 py-3">Waktu</th>
+                        <th className="px-4 py-3">Account ID</th>
+                        <th className="px-4 py-3">Model</th>
+                        <th className="px-4 py-3 text-center">Msg Cnt</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {requestLogs.map((log, i) => (
+                        <tr key={i} className="hover:bg-white/5 transition-colors">
+                          <td className="px-4 py-3 whitespace-nowrap text-zinc-300">{new Date(log.time).toLocaleTimeString()}</td>
+                          <td className="px-4 py-3 font-mono text-xs">{log.accountId}</td>
+                          <td className="px-4 py-3 text-yellow-400/80">{log.model.split('/').pop()}</td>
+                          <td className="px-4 py-3 text-center">{log.messageCount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -660,6 +717,14 @@ export default function App() {
           >
             <Users className={`w-5 h-5 mb-1 ${activeTab === 'users' ? 'drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]' : ''}`} />
             <span className="text-[10px] font-semibold tracking-wide">LIST USER</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('logs')}
+            className={`flex flex-col items-center p-2 rounded-xl transition-all duration-300 ${activeTab === 'logs' ? 'text-yellow-400' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'}`}
+          >
+            <Activity className={`w-5 h-5 mb-1 ${activeTab === 'logs' ? 'drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : ''}`} />
+            <span className="text-[10px] font-semibold tracking-wide">LOG REQUEST</span>
           </button>
         </div>
       </div>

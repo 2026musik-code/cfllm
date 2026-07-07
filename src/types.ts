@@ -12,4 +12,12 @@ export interface SavedUser {
   username: string;
   time: string;
   modelId?: string;
+  requestCount?: number;
+}
+
+export interface RequestLog {
+  time: string;
+  accountId: string;
+  model: string;
+  messageCount: number;
 }
