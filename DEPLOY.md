@@ -1,32 +1,39 @@
-# Deployment ke Cloudflare Pages (Full-Stack Frontend + Backend API)
+# Deployment Full-Stack ke Cloudflare (Web + API)
 
-Agar aplikasi web (React) dan backend (Hono + KV) dapat berjalan di satu URL secara bersamaan tanpa mengalami halaman 404, kita mendeploy-nya sebagai **Cloudflare Pages with Functions / Advanced Mode**.
-
-## Persiapan
-1. Pastikan `wrangler` sudah login (`npx wrangler login`).
-2. Pastikan file `package.json` Anda memiliki script `"build:cf"`. (Sudah ditambahkan otomatis).
-
-## Langkah Deployment
-
-**1. Jalankan Build Khusus Cloudflare**
-Perintah ini akan melakukan build untuk UI React (`dist/`) dan mem-bundle `cloudflare-worker.ts` menjadi file spesial bernama `dist/_worker.js`.
-```bash
-npm run build:cf
-```
-
-**2. Deploy ke Cloudflare Pages**
-Kita menggunakan fitur **Pages**, *bukan* workers. Jalankan perintah:
-```bash
-npx wrangler pages deploy dist --project-name cfllm
-```
-
-Jika ini pertama kalinya Anda membuat project Pages "cfllm", wrangler mungkin akan bertanya kepada Anda untuk mengonfirmasinya.
-
-**3. Mengikat KV Namespace**
-Karena ini menggunakan Cloudflare Pages, `wrangler.toml` (v3) sudah digunakan, tetapi Anda juga dapat memastikan bahwa KV terikat dengan perintah ini:
-Jika gagal terdeteksi, periksa Dashboard Cloudflare -> Workers & Pages -> cfllm -> Settings -> Bindings -> Tambahkan KV Namespace dengan variabel name `userkey` dan arahkan ke KV Anda (`324786888f8a40318c2489d755443036`).
+Sekarang aplikasi telah dikonfigurasi menggunakan fitur **Cloudflare Workers with Assets**. Ini berarti Frontend (React) dan Backend API (Hono) digabung dan dideploy dalam satu perintah yang sama, dan berjalan di satu URL persis seperti Web Preview!
 
 ## Bagaimana ini Bekerja?
-- Ketika pengunjung mengakses web `https://cfllm.pages.dev`, Cloudflare akan mengembalikan UI Website React.
-- Ketika Aplikasi melakukan request chat/database ke URL `/api/...`, Cloudflare akan mengeksekusi Hono Backend yang terhubung dengan KV dan model AI Cloudflare Anda.
-- Semuanya kini berjalan di satu Domain!
+1. Saat Anda menjalankan perintah build (`npm run build`), Vite akan mem-build UI React ke dalam folder `dist/`.
+2. Saat Anda menjalankan perintah deploy (`npx wrangler deploy`), Wrangler akan:
+   - Mem-bundle backend API dari `cloudflare-worker.ts`
+   - Mengunggah seluruh file UI React dari folder `dist/` sebagai Static Assets
+   - Mengikat KV Namespace secara otomatis sesuai `wrangler.toml`.
+3. Semua request API (`/api/*`) akan ditangani oleh skrip Worker.
+4. Semua request lain (seperti `/` atau `/dashboard`) akan dilayani oleh Cloudflare Assets untuk memunculkan halaman React Anda!
+
+## Langkah Deployment
+Anda hanya perlu menjalankan:
+```bash
+npm run build
+npx wrangler deploy
+```
+
+Jika Anda menggunakan CI/CD (seperti GitHub Actions) atau command otomatis dari platform, mereka sudah dikonfigurasi untuk menjalankan dua perintah di atas.
+
+## Konfigurasi KV
+Jika sebelumnya Anda mengalami error tentang KV, kami telah menstandarkan `wrangler.toml`:
+```toml
+name = "cfllm"
+compatibility_date = "2024-03-20"
+main = "cloudflare-worker.ts"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "userkey"
+id = "324786888f8a40318c2489d755443036"
+```
+
+Selamat, aplikasi Anda sekarang sepenuhnya Full-Stack di Cloudflare!

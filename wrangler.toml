@@ -1,6 +1,10 @@
 name = "cfllm"
 compatibility_date = "2024-03-20"
-pages_build_output_dir = "dist"
+main = "cloudflare-worker.ts"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
 
 # KV Namespace Binding
 [[kv_namespaces]]
