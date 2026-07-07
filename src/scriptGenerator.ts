@@ -1,12 +1,12 @@
 import { ScriptConfig } from './types';
 
 export function generatePythonScript(config: ScriptConfig, appUrl: string): string {
-  const DEFAULT_ALLOWED_COMMANDS = '"ls", "pwd", "whoami", "df", "free", "echo", "cat", "grep"';
+  const DEFAULT_ALLOWED_COMMANDS = '"ls", "pwd", "whoami", "df", "free", "echo", "cat", "grep", "top", "uname"';
   const DEFAULT_SYSTEM_PROMPT = `You are an AI assistant living inside a user's terminal (Termux or VPS). 
 Your goal is to help the user manage their system.
 When the user asks you to perform an action, you should respond with a shell command.
 ALWAYS enclose the exact command you want to run inside <CMD> and </CMD> tags.
-For example: <CMD>ls -la</CMD>
+For example: <CMD>free -h</CMD>
 Explain what you are doing briefly before or after the command.`;
 
   return `import os
@@ -23,7 +23,7 @@ PROXY_URL = "${appUrl}/api/chat"
 ACCOUNT_ID = "${config.accountId}"
 API_TOKEN = "${config.apiToken}"
 USERNAME = "${config.username || 'User'}"
-MODEL_ID = "${config.modelId || '@cf/meta/llama-3-8b-instruct'}"
+CURRENT_MODEL = "${config.modelId || '@cf/meta/llama-3.1-8b-instruct'}"
 AUTO_EXECUTE = False
 ALLOWED_COMMANDS = [${DEFAULT_ALLOWED_COMMANDS}]
 
@@ -48,12 +48,17 @@ def send_chat_message(messages):
     data = json.dumps({
         "accountId": ACCOUNT_ID,
         "token": API_TOKEN,
-        "modelId": MODEL_ID,
+        "modelId": CURRENT_MODEL,
         "systemPrompt": SYSTEM_PROMPT,
         "messages": messages
     }).encode('utf-8')
     
-    req = urllib.request.Request(PROXY_URL, data=data, headers={'Content-Type': 'application/json'})
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    req = urllib.request.Request(PROXY_URL, data=data, headers=headers)
     
     try:
         with urllib.request.urlopen(req) as response:
@@ -65,11 +70,33 @@ def send_chat_message(messages):
             print(e.read().decode('utf-8'))
         return "Error connecting to AI proxy."
 
+def print_banner():
+    banner = """\\033[96m
+   _____ ______   _      _      __  __ 
+  / ____|  ____| | |    | |    |  \\/  |
+ | |    | |__    | |    | |    | \\  / |
+ | |    |  __|   | |    | |    | |\\/| |
+ | |____| |      | |____| |____| |  | |
+  \\_____|_|      |______|______|_|  |_|
+                                       
+\\033[0m"""
+    print(banner)
+    print("\\033[92m================================================\\033[0m")
+    print(f"\\033[94m Welcome \\033[97m{USERNAME}\\033[94m to Professional CLI AI\\033[0m")
+    print("\\033[92m================================================\\033[0m")
+    print(f"\\033[93m 🤖 Model: \\033[97m{CURRENT_MODEL}\\033[0m")
+    print(f"\\033[93m 🔗 Proxy: \\033[97m{PROXY_URL}\\033[0m")
+    print(f"\\033[93m ⚡ Auto-execute: \\033[97m{'ON' if AUTO_EXECUTE else 'OFF'}\\033[0m")
+    print("\\033[92m================================================\\033[0m")
+    print("\\033[95m Commands:\\033[0m")
+    print("  /model <id>  : Change AI Model")
+    print("  /clear       : Clear chat history")
+    print("  exit or quit : Close the session")
+    print("\\033[92m================================================\\033[0m\\n")
+
 def main():
-    print("\\033[92m🤖 Termux/VPS AI Shell Assistant Initialized.\\033[0m")
-    print(f"\\033[93m⚠️  Auto-execute is {'ON' if AUTO_EXECUTE else 'OFF'}.\\033[0m")
-    print(f"\\033[94m🔗 Proxy URL: {PROXY_URL}\\033[0m")
-    print("Type 'exit' or 'quit' to close the session.\\n")
+    global CURRENT_MODEL
+    print_banner()
 
     chat_history = []
     
@@ -81,6 +108,20 @@ def main():
                 print("\\nExiting session...")
                 break
             if not user_input.strip():
+                continue
+                
+            if user_input.startswith('/model '):
+                new_model = user_input.split('/model ', 1)[1].strip()
+                if new_model:
+                    CURRENT_MODEL = new_model
+                    print(f"\\033[92m[System] Model changed to: {CURRENT_MODEL}\\033[0m")
+                else:
+                    print("\\033[91m[System] Please specify a model ID.\\033[0m")
+                continue
+                
+            if user_input.lower() == '/clear':
+                chat_history = []
+                print("\\033[92m[System] Chat history cleared.\\033[0m")
                 continue
 
             chat_history.append({"role": "user", "content": user_input})
