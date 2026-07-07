@@ -1,0 +1,6 @@
+{
+  "name": "Termux AI Script Generator",
+  "description": "Generate Python scripts to run an AI assistant with shell execution capabilities on VPS or Termux.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
